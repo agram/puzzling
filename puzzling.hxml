@@ -1,0 +1,6 @@
+-cp src
+-swf puzzling.swf
+-swf-header 1280:640:60:FFFFFF
+-swf-version 11.9
+-main Titre
+-lib h3d
