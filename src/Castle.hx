@@ -45,8 +45,15 @@ class Castle extends Ent
 	
 	override function update(dt:Float) {
 		if (shake > 0) {
-			x += Std.random(5) - 2;
-			y += Std.random(5) - 2;
+			if(shake%2 == 0) {
+				x += Std.random(11) - 5;
+				y += Std.random(11) - 5;
+			}
+			else {
+				if(owner == PLAYER) x =  - 6 * Const.TS;
+				else x = Std.int(game.width + 4) * Const.TS;
+				y = Std.int(game.const.nbTroup / 2 - 2 ) * Const.TS + 64;
+			}
 			shake--;
 		}
 		else {

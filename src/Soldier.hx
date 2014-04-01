@@ -30,8 +30,6 @@ class Soldier extends Ent
 		y:Int
 	};
 	
-	var masque:h2d.Bitmap;
-	
 	var animWeapon:h2d.Anim;
 	
 	public function new(owner, i, j) 
@@ -79,16 +77,12 @@ class Soldier extends Ent
 		
 		state = STAND;
 		anim.colorKey = 0xFFFFFF;
+		anim.colorAdd = new h3d.Vector(0, 0, 0);
 		
 		initAnim();
 		
 		fighting = 0;
 		dying = 0;
-		
-		var tile = h2d.Tile.fromColor(0xFFFFFFFF, Std.int(width), Std.int(height));
-		masque = new h2d.Bitmap(tile, this);
-		masque.alpha = 0;
-		this.addChild(masque);
 	}
 	
 	function set_state(v:State) {
@@ -97,7 +91,6 @@ class Soldier extends Ent
 			case STAND, DEAD : anim.play(gfx.stand);
 			case FALSE_DEAD : anim.play(gfx.falseDead);
 			case FIGHT : anim.play(game.gfx.soldier.rien);
-				masque.alpha = 1;
 			case WIN: 
 				game.matrix[i][j] = null;
 				switch(owner) {
@@ -127,7 +120,9 @@ class Soldier extends Ent
 	override public function update(dt:Float) {
 		super.update(dt);
 		
-		masque.alpha *= 0.93;
+		anim.colorAdd.x *= 0.93;
+		anim.colorAdd.y *= 0.93;
+		anim.colorAdd.z *= 0.93;
 
 		switch(state) {
 			case WIN :
@@ -141,7 +136,7 @@ class Soldier extends Ent
 							case ARCHER : game.gfx.soldier.archer.finalAttack;
 							case MAGE : game.gfx.soldier.mage.finalAttack;
 						});
-					anim.speed = 20;
+					anim.speed = 10;
 					anim.loop = false;
 					animWeapon = new h2d.Anim();
 					animWeapon.colorKey = 0xFFFFFF;
@@ -159,10 +154,6 @@ class Soldier extends Ent
 							case ARCHER : game.gfx.soldier.archer.weapon;
 							case MAGE : game.gfx.soldier.mage.weapon;
 						});
-						//switch(owner) {
-							//case PLAYER:game.enemyCastle.animShake();
-							//case ENEMY:game.playerCastle.animShake();
-						//}
 					}
 					
 			case DEAD :
@@ -173,7 +164,6 @@ class Soldier extends Ent
 				}
 				else dying--;
 			case FIGHT:
-				anim.colorAdd = new h3d.Vector (0.1);
 				if (fighting == 0) {
 					var opponent = game.matrix[i + 1][j];
 					state = STAND;
@@ -297,7 +287,8 @@ class Soldier extends Ent
 			case ENEMY:
 				if ( state != FIGHT) {
 					state = FIGHT;
-					opponent.masque.alpha = 1;
+					anim.colorAdd = new h3d.Vector (1, 1, 1);
+					opponent.anim.colorAdd = new h3d.Vector (1, 1, 1);
 				}
 				return 1;
 		}

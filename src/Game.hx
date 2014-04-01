@@ -417,8 +417,8 @@ class Game extends hxd.App {
 				mage: {
 					stand: Tools.split(tileGfx, 0, 2, 2, 32, 32),
 					falseDead: Tools.split(tileGfx, 2, 2, 2, 32, 32),
-					finalAttack: Tools.split(tileGfx, 6, 2, 2, 32, 32),
-					weapon: Tools.split(tileGfx, 0, 6, 5, 64, 64),
+					finalAttack: Tools.split(tileGfx, 6, 2, 5, 32, 32),
+					weapon: Tools.split(tileGfx, 0, 7, 5, 64, 64),
 				},
 				rien: Tools.split(tileGfx, 0, 3, 1),
 			},

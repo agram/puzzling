@@ -10,7 +10,7 @@ class Titre extends hxd.App {
 	public var board:h2d.Layers;
 	public var anims:Array<h2d.Anim>;
 	
-	public static var deblocage:ModeJeu = IMPOSSIBLE;
+	public static var deblocage:ModeJeu = FACILE;
 
 	public var gfx : {
 		soldier: {
@@ -48,7 +48,6 @@ class Titre extends hxd.App {
 		s2d.add(board, Const.L_GAME);
 		
 		bmpOmbre = new h2d.Bitmap(Res.titre.toTile());
-		//bmpOmbre.x = (Const.SCENE_W - 512) / 2 + 20;
 		bmpOmbre.x = -470;
 		bmpOmbre.y = (Const.SCENE_H - 256) / 2 + 10 - 100;
 		bmpOmbre.colorKey = 0xFFFFFF;
@@ -56,7 +55,6 @@ class Titre extends hxd.App {
 		s2d.addChild(bmpOmbre);
 		
 		bmp = new h2d.Bitmap(Res.titre.toTile());
-		//bmp.x = (Const.SCENE_W - 512) / 2;
 		bmp.x = Const.SCENE_W;
 		bmp.y = (Const.SCENE_H - 256) / 2 - 100;
 		bmp.colorKey = 0xFFFFFF;
