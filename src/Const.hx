@@ -7,10 +7,6 @@ class Const
 	public static var SCENE_W = 960; // SCENE WIDTH
 	public static var SCENE_H = 480; // SCENE HEIGHT
 	
-	public static var L_BG 		= 1; // LAYER BACKGROUND
-	public static var L_GAME 	= 2; // LAYER GAME
-	public static var L_UI 		= 3; // LAYER UI
-	
 	//***
 	public var CASTLE_PLAYER:Int;
 	public var CASTLE_ENEMY:Int;
@@ -25,7 +21,7 @@ class Const
 	
 	public static var MOVESPEED = 10;
 	public static var SUPPLYSPEED = 10;
-	public static var ASSAULTSPEED = 10;
+	public static var ASSAULTSPEED = 5;
 	public static var DEATHSPEED = 20;
 	
 	public var chosenMode:ModeJeu;
@@ -35,6 +31,15 @@ class Const
 		this.chosenMode = chosenMode;
 		
 		switch(chosenMode) {
+			case AVENTURE:
+				TIMER = 14;
+				CASTLE_PLAYER = 10;
+				CASTLE_ENEMY = 1;
+				playerWave = 1;
+				enemyWave = 1;
+				enemySupply = 1;
+				battleground = 4;
+				nbTroup = 4;
 			case FACILE:
 				TIMER = 14;
 				CASTLE_PLAYER = 10;
@@ -80,7 +85,6 @@ class Const
 				enemySupply = 3;
 				battleground = 2;
 				nbTroup = 10;
-				
 		}
 	}
 }

@@ -12,112 +12,115 @@ class Titre extends hxd.App {
 	
 	public static var deblocage:ModeJeu = FACILE;
 
-	public var gfx : {
-		soldier: {
-			warrior: {
-				stand: Array<h2d.Tile>,
-				falseDead: Array<h2d.Tile>,
-				finalAttack: Array<h2d.Tile>,
-				weapon: Array<h2d.Tile>,
-			},
-			archer: {
-				stand: Array<h2d.Tile>,
-				falseDead: Array<h2d.Tile>,
-				finalAttack: Array<h2d.Tile>,
-				weapon: Array<h2d.Tile>,
-			},
-			mage: {
-				stand: Array<h2d.Tile>,
-				falseDead: Array<h2d.Tile>,
-				finalAttack: Array<h2d.Tile>,
-				weapon: Array<h2d.Tile>,
-			},
-			rien:Array<h2d.Tile>,
-		},
-		castle:Array<h2d.Tile>,
-		message: {
-			main: Array<h2d.Tile>,
-			second: Array<h2d.Tile>,
-		},
-	};
-	
 	override function init() {
 		s2d.setFixedSize(Const.SCENE_W, Const.SCENE_H);
 		engine.backgroundColor = 0xFFF1F7C1;
 		board = new h2d.Layers();
-		s2d.add(board, Const.L_GAME);
+		s2d.add(board, 1);
 		
 		bmpOmbre = new h2d.Bitmap(Res.titre.toTile());
-		bmpOmbre.x = -470;
+		bmpOmbre.x = (Const.SCENE_W - 512) / 2 + 20;
 		bmpOmbre.y = (Const.SCENE_H - 256) / 2 + 10 - 100;
 		bmpOmbre.colorKey = 0xFFFFFF;
 		bmpOmbre.alpha = 0.3;
 		s2d.addChild(bmpOmbre);
 		
 		bmp = new h2d.Bitmap(Res.titre.toTile());
-		bmp.x = Const.SCENE_W;
+		bmp.x = (Const.SCENE_W - 512) / 2;
 		bmp.y = (Const.SCENE_H - 256) / 2 - 100;
 		bmp.colorKey = 0xFFFFFF;
 		s2d.addChild(bmp);
 
+		initMenuNiveau();
+		
+		initGfx();
+		
+		initAnimIntro();
+	}		
+	
+	override function update(dt:Float) {
+		if( bmp.x > (Const.SCENE_W - 512) / 2 ) bmp.x -= 10;
+		if ( bmpOmbre.x < (Const.SCENE_W - 512) / 2 + 20 ) bmpOmbre.x += 10;
+	}
+	
+	function startGame (chosenMode:ModeJeu) {
+		for (b in mode) b.remove();
+		bmp.remove();
+		bmpOmbre.remove();
+		const = new Const(chosenMode);
+		
+		s2d.dispose();
+		Game.inst = new Game(engine);
+	}
+	
+	public static function main() {	
+		hxd.Res.loader = new hxd.res.Loader(hxd.res.EmbedFileSystem.create(null,{compressSounds:true}));
+		inst = new Titre();
+	}
+	
+	function initMenuNiveau() {
 		mode = [];
 		
+		//var a = new Mybouton(-30, 'Aventure');
+		//a.setActif();
+		//a.interactive.onRelease = function (_) { 
+			//startGame(AVENTURE);
+		//}
+		//mode.push(a);
+
 		var a = new Mybouton(20, 'Facile');
+		a.setActif();
 		a.interactive.onRelease = function (_) { 
 			startGame(FACILE);
 		}
 		mode.push(a);
 
+		var a = new Mybouton(50, 'Moyen');
 		switch(deblocage) {
 			case IMPOSSIBLE, EXPERT, DIFFICILE, MOYEN :
-				var a = new Mybouton(50, 'Moyen');
+				a.setActif();
 				a.interactive.onRelease = function (_) { 
 					startGame(MOYEN);
 				}
-				mode.push(a);
 			default:
-				var a = new Mybouton(50, 'Moyen', false);
-				mode.push(a);
 		}
+		mode.push(a);
 
+		var a = new Mybouton(80, 'Difficile');
 		switch(deblocage) {
 			case IMPOSSIBLE, EXPERT, DIFFICILE :
-				var a = new Mybouton(80, 'Difficile');
+				a.setActif();
 				a.interactive.onRelease = function (_) { 
 					startGame(DIFFICILE);
 				}
-				mode.push(a);
 			default:
-				var a = new Mybouton(80, 'Difficile', false);
-				mode.push(a);
 		}				
+		mode.push(a);
 				
+		var a = new Mybouton(110, 'Expert');
 		switch(deblocage) {
 			case IMPOSSIBLE, EXPERT :
-				var a = new Mybouton(110, 'Expert');
+				a.setActif();
 				a.interactive.onRelease = function (_) { 
 					startGame(EXPERT);
 				}
-				mode.push(a);
-			default:
-				var a = new Mybouton(110, 'Expert', false);
-				mode.push(a);
+			default:		
 		}				
+		mode.push(a);
 				
+		var a = new Mybouton(140, 'Impossible');
 		switch(deblocage) {
 			case IMPOSSIBLE :
-				var a = new Mybouton(140, 'Impossible');
+				a.setActif();
 				a.interactive.onRelease = function (_) { 
 					startGame(IMPOSSIBLE);
 				}
-				mode.push(a);
-
 			default:
-				var a = new Mybouton(140, 'Impossible', false);
-				mode.push(a);
 		}				
-		
-		initGfx();
+		mode.push(a);
+	}
+	
+	function initAnimIntro () {
 		anims = [];
 		var a = new h2d.Anim(gfx.soldier.warrior.stand, 4, board);
 		a.x = Const.SCENE_W / 3 - 16;
@@ -157,27 +160,37 @@ class Titre extends hxd.App {
 		a.y = 365;
 		a.colorKey = 0xFFFFFF;
 		anims.push(a);
-	}		
-	
-	override function update(dt:Float) {
-		if( bmp.x > (Const.SCENE_W - 512) / 2 ) bmp.x -= 10;
-		if ( bmpOmbre.x < (Const.SCENE_W - 512) / 2 + 20 ) bmpOmbre.x += 10;
-	}
-	
-	function startGame (chosenMode:ModeJeu) {
-		for (b in mode) b.remove();
-		bmp.remove();
-		bmpOmbre.remove();
-		const = new Const(chosenMode);
 		
-		s2d.dispose();
-		Game.inst = new Game(engine);
 	}
 	
-	public static function main() {	
-		hxd.Res.loader = new hxd.res.Loader(hxd.res.EmbedFileSystem.create(null,{compressSounds:true}));
-		inst = new Titre();
-	}
+	public var gfx : {
+		soldier: {
+			warrior: {
+				stand: Array<h2d.Tile>,
+				falseDead: Array<h2d.Tile>,
+				finalAttack: Array<h2d.Tile>,
+				weapon: Array<h2d.Tile>,
+			},
+			archer: {
+				stand: Array<h2d.Tile>,
+				falseDead: Array<h2d.Tile>,
+				finalAttack: Array<h2d.Tile>,
+				weapon: Array<h2d.Tile>,
+			},
+			mage: {
+				stand: Array<h2d.Tile>,
+				falseDead: Array<h2d.Tile>,
+				finalAttack: Array<h2d.Tile>,
+				weapon: Array<h2d.Tile>,
+			},
+			rien:Array<h2d.Tile>,
+		},
+		castle:Array<h2d.Tile>,
+		message: {
+			main: Array<h2d.Tile>,
+			second: Array<h2d.Tile>,
+		},
+	};
 	
 	function initGfx() {
 		var tileGfx = Res.gfx2.toTile();

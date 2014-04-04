@@ -4,9 +4,11 @@ import Common;
 class Game extends hxd.App {
 	public static var inst : Game;	
 	public var ents:Array<Ent>;
+	public var twins:Array<Twin>;
 	
 	public var boardBackground:h2d.Layers;
 	public var board:h2d.Layers;
+	public var boardLevelup:h2d.Layers;
 	public var boardUi:h2d.Layers;
 
 	public var keysActive : AllKeys;
@@ -17,7 +19,7 @@ class Game extends hxd.App {
 	public var PW:Int;
 	
 	public var matrix:Array<Array<Soldier>>;
-	public var battle:Int;
+	public var battle:BattleState;
 	public var gameOver:Bool;
 	
 	public var playerCastle:Castle;
@@ -43,6 +45,7 @@ class Game extends hxd.App {
 		
 		engine.backgroundColor = 0xFFF1F7C1;
 		ents = [];
+		twins = [];
 
 		width = const.playerWave + const.battleground + const.enemyWave;
 		height = const.nbTroup;
@@ -57,20 +60,27 @@ class Game extends hxd.App {
 		board.x = Std.int( (Const.SCENE_W - width * Const.TS) / 2);
 		board.y = Std.int((Const.SCENE_H - height * Const.TS) / 2);
 		
-		s2d.add(boardBackground, Const.L_BG);
-		s2d.add(board, Const.L_GAME);
-		s2d.add(boardUi, Const.L_UI);
+		boardLevelup = new h2d.Layers();
+
+		s2d.add(boardBackground, 1);
+		s2d.add(board, 2);
+		s2d.add(boardLevelup, 3);
+		s2d.add(boardUi, 4);
 		
-		//var tile = h2d.Tile.fromColor(0xFFF1F7C1, Const.SCENE_W, Const.SCENE_H);
-		//new h2d.Bitmap(tile,  boardBackground);
 		var tile2 = h2d.Tile.fromColor(0xFFA5C882, width * Const.TS, height * Const.TS);
 		new h2d.Bitmap(tile2,  board);
 		
+		var tile2 = h2d.Tile.fromColor(0x80808080, Const.SCENE_W, Const.SCENE_H);
+		new h2d.Bitmap(tile2,  boardLevelup);
+		var tile2 = h2d.Tile.fromColor(0x80101010, Std.int(Const.SCENE_W / 4), Std.int(Const.SCENE_H / 4));
+		new h2d.Bitmap(tile2,  boardLevelup);
+		boardLevelup.visible = false;
+
 		pause = false;
 		
 		initGfx();
 
-		battle = 0;
+		battle = NONE;
 		gameOver = false;
 
 		matrix = [];
@@ -90,8 +100,6 @@ class Game extends hxd.App {
 		next = const.enemySupply;
 		lastY = 0;
 
-		//initInteractive();
-		
 		ui = new UI();
 		easy = false;
 		
@@ -109,8 +117,8 @@ class Game extends hxd.App {
 		
 		if (enemyCastle.pv <= 0 || playerCastle.pv <= 0 ) { 
 			gameOver = true;  
-			var m = new Message();
 			if (playerCastle.pv <= 0) {
+				var m = new Message();
 				m.texte.text = 'Perdu !\n\nCliquer pour revenir au menu';
 				m.i.onClick = function (_) {
 					m.i.remove();
@@ -120,6 +128,15 @@ class Game extends hxd.App {
 				}
 			}
 			else {
+				if (const.chosenMode == AVENTURE) {
+					var m = new Message.Levelup();
+					m.texte.text = 'Gagné !Choisissez maintenant une amélioration :';
+					boardLevelup.visible = true;
+					
+					return;
+				}
+				
+				var m = new Message();
 				m.texte.text = 'Gagné !\n\n\nCliquer pour revenir au menu';
 				m.i.onClick = function (_) {
 					m.i.remove();
@@ -143,6 +160,8 @@ class Game extends hxd.App {
 								case IMPOSSIBLE, EXPERT, DIFFICILE :
 								default : Titre.deblocage = MOYEN;
 							}
+						case AVENTURE:
+								
 					}
 					Titre.inst = new Titre(engine);
 				}
@@ -179,7 +198,10 @@ class Game extends hxd.App {
 		for (oneEnt in ents.copy()) {
 			oneEnt.update(dt);
 		}
-		//engine.render(s2d);
+
+		for (oneTwin in twins.copy()) {
+			oneTwin.update(dt);
+		}
 	}
 
 	function traitementClavier() {
@@ -195,7 +217,7 @@ class Game extends hxd.App {
 		next = const.enemySupply + ((timer < const.TIMER / 2 ) ? 1 : 0);
 		ui.time.text = 'Attack !';
 		clean();
-		battle = 1;	
+		battle = BATTLE_RESOLVING;	
 		easy = false;
 	}
 	
@@ -298,7 +320,7 @@ class Game extends hxd.App {
 	}
 		
 	function resolveBattle() {
-		if( battle == 1) {
+		if( battle == BATTLE_RESOLVING) {
 			var count = 0;
 			var i = width - 1;
 			
@@ -307,30 +329,30 @@ class Game extends hxd.App {
 				while( j >= 0 ){
 					var soldier = matrix[i][j];
 					if(soldier != null && soldier.owner == PLAYER) {
-						count += soldier.moveOneStepFighting(i, j);
+						count += soldier.moveAndFight(i, j);
 					}
 					j--;
 				}
 				i--;
 			}
 			
-			if (count == 0) battle = 2;
+			if (count == 0) battle = CPU_RENFORT;
 		}
-		if (battle == 2 && nbSoldierWin == 0) {
-			battle = 3;
+		if (battle == CPU_RENFORT && nbSoldierWin == 0) {
+			battle = PLAYER_RENFORT;
 			create(ENEMY, next);
 		}
 		
-		if (battle == 3 && nbSoldierWin == 0) {
+		if (battle == PLAYER_RENFORT && nbSoldierWin == 0) {
 			create(PLAYER);
 			timer = const.TIMER;
 			
-			battle = 0;
+			battle = NONE;
 		}
 	}
 	
 	function isBattle() {
-		return battle > 0;
+		return battle != NONE;
 	}
 	
 	function falseCharge() {
@@ -356,7 +378,7 @@ class Game extends hxd.App {
 			timer = 0;
 			ui.time.text = 'Attack !';
 			clean();
-			battle = 1;	
+			battle = BATTLE_RESOLVING;
 			easy = false;
 		}
 	}

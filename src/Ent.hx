@@ -28,14 +28,13 @@ class Ent extends h2d.Sprite
 	
 	public var name:String;
 	
-	public function new (x, y, layer:Int = -1)
+	public function new (x, y, layer:Int = 1)
 	{
 		name = '';
 		active = true;
 		
 		id = UID++;
 		
-		if (layer == -1) layer = Const.L_GAME;
 		super();
 
 		this.x = x;

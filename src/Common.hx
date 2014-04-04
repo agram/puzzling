@@ -1,6 +1,7 @@
 import hxd.Key in K;
 
 enum ModeJeu {
+	AVENTURE;
 	FACILE;
 	MOYEN;
 	DIFFICILE;
@@ -33,6 +34,9 @@ enum ResFight {
 	DEFEAT;
 }
 
-enum MoveType {
-	
+enum BattleState {
+	NONE;
+	BATTLE_RESOLVING;
+	CPU_RENFORT;
+	PLAYER_RENFORT;
 }

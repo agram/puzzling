@@ -22,9 +22,6 @@ class Particule extends Ent {
 		vx = 0;
 		vy = 0;
 		this.type = type;
-
-		//switch(type) {
-		//}
 	}
 	
 	override function kill() {

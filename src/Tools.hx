@@ -23,4 +23,5 @@ class Tools
 			tab.push(t.sub(startX*w + i*w, y*h, w, h, dx, dy));
 		}
 	}
+	
 }

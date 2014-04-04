@@ -15,6 +15,7 @@ class Soldier extends Ent
 	public var falseDead:Bool;
 	public var state(default, set):State;
 	var fighting:Int;
+	var moving:Bool;
 	var dying:Int;
 	var i:Int;
 	var j:Int;
@@ -24,11 +25,6 @@ class Soldier extends Ent
 	};
 
 	var texte:h2d.Text;
-	
-	var goalCastle: {
-		x:Int, 
-		y:Int
-	};
 	
 	var animWeapon:h2d.Anim;
 	
@@ -41,23 +37,15 @@ class Soldier extends Ent
 				x = game.playerCastle.x + Const.TS / 2;
 				y = game.playerCastle.y;
 				
-				vx += (i * Const.TS - x) / 100 ;
-				vy += (j * Const.TS - y) / 100 ;
-				var d = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
-				var coeff = Const.SUPPLYSPEED / d;
-				vx *= coeff;
-				vy *= coeff;
+				var a = new Twin(this, i * Const.TS, j * Const.TS, 40);
+				a.setToSpeed(10 + 2 * i);
 
 			case ENEMY : 
 				x = game.enemyCastle.x + Const.TS / 2;
 				y = game.enemyCastle.y;
 				
-				vx += (i * Const.TS - x) / 100 ;
-				vy += (j * Const.TS - y) / 100 ;
-				var d = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
-				var coeff = Const.SUPPLYSPEED / d;
-				vx *= coeff;
-				vy *= coeff;
+				var a = new Twin(this, i * Const.TS, j * Const.TS, 40, function (e) { return 1 - Math.cos(e * 3.14 / 2); } );
+				a.setToSpeed(10 + 2 * (game.width - i));
 		}
 
 		this.i = i;
@@ -83,6 +71,7 @@ class Soldier extends Ent
 		
 		fighting = 0;
 		dying = 0;
+		moving = false;
 	}
 	
 	function set_state(v:State) {
@@ -94,24 +83,24 @@ class Soldier extends Ent
 			case WIN: 
 				game.matrix[i][j] = null;
 				switch(owner) {
-					case PLAYER: 
-						goalCastle = {
-							x: Std.int(game.enemyCastle.x + Std.random(100) - 50) , 
-							y: Std.int(game.enemyCastle.y + Std.random(100) - 50) , 
-						}
-					case ENEMY:
-						goalCastle = {
-							x: Std.int(game.playerCastle.x + Std.random(100) - 50) , 
-							y: Std.int(game.playerCastle.y + Std.random(100) - 50) , 
-						}
+				case PLAYER:
+					moving = true;
+					var a = new Twin(this, (game.width + 1) * Const.TS, j * Const.TS );
+					a.setToSpeed(Const.MOVESPEED);
+					a.onFinish(function() { 
+						var b = new Twin(this, Std.int(game.enemyCastle.x + Std.random(100) - 50),Std.int(game.enemyCastle.y + Std.random(100) - 50));
+						b.setToSpeed(Const.ASSAULTSPEED);
+						b.onFinish(function() { moving = false; animFinal(); } ); 
+					} );
+				case ENEMY:
+					var a = new Twin(this, -1 * Const.TS, j * Const.TS );
+					a.setToSpeed(Const.MOVESPEED);
+					a.onFinish(function() { 
+						var b = new Twin(this, Std.int(game.playerCastle.x + Std.random(100) - 50), Std.int(game.playerCastle.y + Std.random(100) - 50));
+						b.setToSpeed(Const.ASSAULTSPEED);
+						b.onFinish(function() { moving = false; animFinal(); } ); 
+					});
 				}
-				vx += (goalCastle.x - x) / 100 ;
-				vy += (goalCastle.y - y) / 100 ;
-				var d = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
-				var coeff = Const.ASSAULTSPEED / d;
-				vx *= coeff;
-				vy *= coeff;
-				
 				game.nbSoldierWin++;
 		}
 		return state;
@@ -126,35 +115,7 @@ class Soldier extends Ent
 
 		switch(state) {
 			case WIN :
-				if (Tools.distanceSquare(x, goalCastle.x, y, goalCastle.y) < 900 && !dead) {
-					vx = vy = 0;
-					dead = true;
-					death = 30;
-					anim.play(
-						switch(type) {
-							case WARRIOR : game.gfx.soldier.warrior.finalAttack;
-							case ARCHER : game.gfx.soldier.archer.finalAttack;
-							case MAGE : game.gfx.soldier.mage.finalAttack;
-						});
-					anim.speed = 10;
-					anim.loop = false;
-					animWeapon = new h2d.Anim();
-					animWeapon.colorKey = 0xFFFFFF;
-					animWeapon.speed = 10;
-					animWeapon.y = -32;
-					animWeapon.loop = false;
-					if (owner == ENEMY) {
-						animWeapon.scaleX = -1;
-						animWeapon.x = 32;
-					}
-					this.addChild(animWeapon);
-					animWeapon.play(
-						switch(type) {
-							case WARRIOR : game.gfx.soldier.warrior.weapon;
-							case ARCHER : game.gfx.soldier.archer.weapon;
-							case MAGE : game.gfx.soldier.mage.weapon;
-						});
-					}
+				if (moving) return;
 					
 			case DEAD :
 				anim.scaleY = dying / Const.DEATHSPEED;
@@ -250,21 +211,20 @@ class Soldier extends Ent
 			this.i = i - nb;
 			this.j = j;
 			game.matrix[i][j] = null;
-			x = i * Const.TS;
-			y = j * Const.TS;
-			vx = -Const.SUPPLYSPEED;
-			vy = 0;
+			
+			var a = new Twin(this, (i - nb) * Const.TS, j * Const.TS);
+			a.setToSpeed(Const.MOVESPEED);
 		}
 
 	}
 	
-	public function moveOneStepFighting(i, j) {
+	public function moveAndFight(i, j) {
 		this.i = i;
 		this.j = j;
 
 		if (state == DEAD) return 1;
 		
-		if (i >= game.width - 1) {
+		if (i == game.width - 1) {
 			state = WIN;
 			return 1;
 		}
@@ -274,7 +234,12 @@ class Soldier extends Ent
 		if (opponent == null) {
 			game.matrix[i + 1][j] = this;
 			game.matrix[i][j] = null;
-			vx = Const.MOVESPEED;
+			
+			var a = new Twin(this, (i + 1) * Const.TS, j * Const.TS);
+			a.setToSpeed(Const.MOVESPEED);
+			moving = true;
+			a.onFinish(function() { moving = false; } );
+			
 			return 1;
 		}
 		
@@ -295,14 +260,8 @@ class Soldier extends Ent
 	}
 
 	public function isMoving(i, j) {
-		if(state != WIN && Tools.distance(i * Const.TS, x, j * Const.TS, y) < 10) {
-			x = i * Const.TS;
-			y = j * Const.TS;
-			vx = 0;
-			vy = 0;
-			return 0;
-		}
-		return 1;
+		if (moving) return 1;
+		return 0;
 	}
 	
 	function die() {
@@ -323,9 +282,38 @@ class Soldier extends Ent
 	}
 	
 	public function put (i, j) {
-		x = i * Const.TS;
-		y = j * Const.TS;
+		moving = true;
+		var a = new Twin(this, i * Const.TS, j * Const.TS, 10, function (e) { return 1 - Math.cos(e * 3.14 / 2); } );
+		a.onFinish(function () { moving = false; } );
 	}
 	
-	
+	function animFinal() {
+		dead = true;
+		death = 30;
+		anim.play(
+			switch(type) {
+				case WARRIOR : game.gfx.soldier.warrior.finalAttack;
+				case ARCHER : game.gfx.soldier.archer.finalAttack;
+				case MAGE : game.gfx.soldier.mage.finalAttack;
+			});
+		anim.speed = 10;
+		anim.loop = false;
+		animWeapon = new h2d.Anim();
+		animWeapon.colorKey = 0xFFFFFF;
+		animWeapon.speed = 10;
+		animWeapon.y = -32;
+		animWeapon.loop = false;
+		if (owner == ENEMY) {
+			animWeapon.scaleX = -1;
+			animWeapon.x = 32;
+		}
+		this.addChild(animWeapon);
+		animWeapon.play(
+			switch(type) {
+				case WARRIOR : game.gfx.soldier.warrior.weapon;
+				case ARCHER : game.gfx.soldier.archer.weapon;
+				case MAGE : game.gfx.soldier.mage.weapon;
+			});
+		
+	}
 }

@@ -6,7 +6,7 @@ class Part extends Ent {
 	
 	public function new ()
 	{
-		super(0, 0, Const.L_BG);
+		super(0, 0, 1);
 		fadeLimit = 10;
 		pv = 10;
 		mc = new h2d.Graphics(this);		
